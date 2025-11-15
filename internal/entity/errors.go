@@ -13,4 +13,7 @@ var (
 	ErrPRMerged    = errors.New("cannot reassign on merged PR")
 	ErrNotAssigned = errors.New("reviewer is not assigned to this PR")
 	ErrNoCandidate = errors.New("no active replacement candidate in team")
+
+	ErrSerializationFailure = errors.New("serialization failure")
+	ErrInternalError        = errors.New("internal error")
 )
