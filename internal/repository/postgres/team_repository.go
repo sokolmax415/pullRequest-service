@@ -38,7 +38,7 @@ func (r *PostgresTeamRepository) CreateNewTeam(ctx context.Context, teamName str
 	return nil
 }
 
-func (r *PostgresTeamRepository) GetUserTeam(ctx context.Context, userId string) (*string, error) {
+func (r *PostgresTeamRepository) GetTeamForUserId(ctx context.Context, userId string) (*string, error) {
 	var currentTeam string
 	query, args, err := r.sq.Select("team_name").From("users").Where(squirrel.Eq{"user_id": userId}).ToSql()
 	if err != nil {
@@ -56,21 +56,6 @@ func (r *PostgresTeamRepository) GetUserTeam(ctx context.Context, userId string)
 	}
 
 	return &currentTeam, nil
-}
-
-func (r *PostgresTeamRepository) AddUserToTeam(ctx context.Context, user *entity.User) error {
-	query, args, err := r.sq.Insert("users").Columns("user_id", "username", "is_active", "team_name").Values(user.UserID, user.UserName, user.IsActive, user.TeamName).ToSql()
-	if err != nil {
-		return fmt.Errorf("failed to build insert user query")
-	}
-
-	exec := executerFromContext(ctx, r.db)
-	_, err = exec.ExecContext(ctx, query, args...)
-	if err != nil {
-		return fmt.Errorf("exec insert user: %w", err)
-	}
-
-	return nil
 }
 
 func (r *PostgresTeamRepository) GetTeam(ctx context.Context, teamName string) (*entity.Team, error) {
