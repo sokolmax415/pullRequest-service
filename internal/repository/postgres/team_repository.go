@@ -58,8 +58,8 @@ func (r *PostgresTeamRepository) GetUserTeam(ctx context.Context, userId string)
 	return &currentTeam, nil
 }
 
-func (r *PostgresTeamRepository) AddUserToTeam(ctx context.Context, user *entity.User, teamName string) error {
-	query, args, err := r.sq.Insert("users").Columns("user_id", "username", "is_active", "team_name").Values(user.UserID, user.UserName, user.IsActive, teamName).ToSql()
+func (r *PostgresTeamRepository) AddUserToTeam(ctx context.Context, user *entity.User) error {
+	query, args, err := r.sq.Insert("users").Columns("user_id", "username", "is_active", "team_name").Values(user.UserID, user.UserName, user.IsActive, user.TeamName).ToSql()
 	if err != nil {
 		return fmt.Errorf("failed to build insert user query")
 	}
