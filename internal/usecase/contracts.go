@@ -21,6 +21,7 @@ type UserRepository interface {
 	SetActive(ctx context.Context, userId string, isActive bool) error
 	GetActiveUsersByTeam(ctx context.Context, teamName string) ([]string, error)
 	IsUserActive(ctx context.Context, userId string) (bool, error)
+	GetUserById(ctx context.Context, userId string) (*entity.User, error)
 }
 
 type PRRepository interface {

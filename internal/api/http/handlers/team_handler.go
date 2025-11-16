@@ -4,8 +4,6 @@ import (
 	"net/http"
 	"pullrequest-service/internal/api/http/types"
 	"pullrequest-service/internal/entity"
-
-	"github.com/go-chi/chi/v5"
 )
 
 type TeamHandler struct {
@@ -48,7 +46,7 @@ func (h *TeamHandler) AddTeam(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *TeamHandler) GetTeam(w http.ResponseWriter, r *http.Request) {
-	teamName := chi.URLParam(r, "team_name")
+	teamName := r.URL.Query().Get("team_name")
 
 	team, err := h.teamUsecase.GetTeam(r.Context(), teamName)
 	if err != nil {

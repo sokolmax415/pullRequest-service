@@ -3,8 +3,6 @@ package handler
 import (
 	"net/http"
 	"pullrequest-service/internal/api/http/types"
-
-	"github.com/go-chi/chi/v5"
 )
 
 type UserHandler struct {
@@ -36,7 +34,7 @@ func (h *UserHandler) SetActive(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *UserHandler) GetPR(w http.ResponseWriter, r *http.Request) {
-	userId := chi.URLParam(r, "user_id")
+	userId := r.URL.Query().Get("user_id")
 
 	pr, err := h.userUsecase.GetPR(r.Context(), userId)
 	if err != nil {
