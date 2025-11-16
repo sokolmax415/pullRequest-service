@@ -16,35 +16,41 @@ func NewUserUsecase(userRep UserRepository, prRep PRRepository, logger *slog.Log
 	return &UserUsecase{userRep: userRep, prRep: prRep, logger: logger}
 }
 
-func (u *UserUsecase) SetActiveFlag(ctx context.Context, userId string, isActive bool) error {
+func (u *UserUsecase) SetActiveFlag(ctx context.Context, userId string, isActive bool) (*entity.User, error) {
 	u.logger.Info("start setting activity flag for user", "user_id", userId, "is_active", isActive)
 
 	if userId == "" {
 		u.logger.Warn("invalid user id: empty", "user_id", userId)
-		return entity.ErrInvalidRequest
+		return nil, entity.ErrInvalidRequest
 	}
 
 	exist, err := u.userRep.IsUserExist(ctx, userId)
 
 	if err != nil {
 		u.logger.Error("error checking user existence", "user_id", userId, "error", err)
-		return entity.ErrInternalError
+		return nil, entity.ErrInternalError
 	}
 
 	if !exist {
 		u.logger.Warn("user not found", "user_id", userId)
-		return entity.ErrNotFound
+		return nil, entity.ErrNotFound
 	}
 
 	err = u.userRep.SetActive(ctx, userId, isActive)
 	if err != nil {
 		u.logger.Error("failed to set user activity flag", "user_id", userId, "is_active", isActive, "error", err)
-		return entity.ErrInternalError
+		return nil, entity.ErrInternalError
+	}
+
+	user, err := u.userRep.GetUserById(ctx, userId)
+
+	if err != nil {
+		u.logger.Error("failed to get user", "user_id", userId, "error", err)
 	}
 
 	u.logger.Info("successfully set activity flag for user", "user_id", userId, "is_active", isActive)
 
-	return nil
+	return user, nil
 }
 
 func (u *UserUsecase) GetPR(ctx context.Context, userId string) ([]entity.PullRequestShort, error) {
