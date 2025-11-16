@@ -22,12 +22,17 @@ func isUniqueViolation(err error) bool {
 	return false
 }
 
-func executerFromContext(ctx context.Context, db *sql.DB) (exec Execer) {
-	if tx, ok := ctx.Value(txKey{}).(*sql.Tx); ok && tx != nil {
-		exec = tx
-	} else {
-		exec = db
+func isSerializationFailure(err error) bool {
+	var pgErr *pgconn.PgError
+	if errors.As(err, &pgErr) {
+		return pgErr.Code == "40001"
 	}
+	return false
+}
 
-	return
+func executerFromContext(ctx context.Context, db *sql.DB) Execer {
+	if tx, ok := ctx.Value(txKey{}).(*sql.Tx); ok && tx != nil {
+		return tx
+	}
+	return db
 }

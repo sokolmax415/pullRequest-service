@@ -127,3 +127,40 @@ func (r *PostgresPRRepository) IsReviewerForPR(ctx context.Context, prId string,
 	return true, nil
 
 }
+
+func (r *PostgresPRRepository) IsPROpen(ctx context.Context, prId string) (bool, error) {
+	query, args, err := r.sq.Select("status").From("pull_requests").Where(squirrel.Eq{"pull_request_id": prId}).ToSql()
+
+	if err != nil {
+		return false, fmt.Errorf("failed to build select status for PR: %w", err)
+	}
+
+	exec := executerFromContext(ctx, r.db)
+
+	var status string
+	if err := exec.QueryRowContext(ctx, query, args...).Scan(&status); err != nil {
+		if err == sql.ErrNoRows {
+			return false, entity.ErrNotFound
+		}
+		return false, fmt.Errorf("failed to scan status row: %w", err)
+	}
+
+	return status == string(entity.OPEN), nil
+}
+
+func (r *PostgresPRRepository) DeleteReviewer(ctx context.Context, prId string, userId string) error {
+	query, args, err := r.sq.Delete("pr_reviewers").Where(squirrel.Eq{"pull_request_id": prId, "user_id": userId}).ToSql()
+
+	if err != nil {
+		return fmt.Errorf("failed to build delete reviewer: %w", err)
+	}
+
+	exec := executerFromContext(ctx, r.db)
+
+	_, err = exec.ExecContext(ctx, query, args...)
+	if err != nil {
+		return fmt.Errorf("failed to exec delete reviewer: %w", err)
+	}
+
+	return nil
+}

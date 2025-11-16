@@ -43,7 +43,7 @@ func (r *PostgresUserRepository) IsUserExist(ctx context.Context, userId string)
 
 	exec := executerFromContext(ctx, r.db)
 
-	var dummy string
+	var dummy int
 	err = exec.QueryRowContext(ctx, query, args...).Scan(&dummy)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -71,4 +71,59 @@ func (r *PostgresUserRepository) SetActive(ctx context.Context, userId string, i
 	}
 
 	return nil
+}
+
+func (r *PostgresUserRepository) GetActiveUsersByTeam(ctx context.Context, teamName string) ([]entity.User, error) {
+	query, args, err := r.sq.Select("user_id", "username", "is_active", "team_name").From("users").
+		Where(squirrel.Eq{"is_active": true, "team_name": teamName}).ToSql()
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to build get active users by team_name: %w", err)
+	}
+
+	exec := executerFromContext(ctx, r.db)
+
+	rows, err := exec.QueryContext(ctx, query, args...)
+	if err != nil {
+		return nil, fmt.Errorf("exec select active users by team_name: %w", err)
+	}
+	defer rows.Close()
+
+	usersList := make([]entity.User, 0)
+
+	for rows.Next() {
+		var activeUser entity.User
+		if err := rows.Scan(&activeUser.UserID, &activeUser.UserName, &activeUser.IsActive, &activeUser.TeamName); err != nil {
+			return nil, fmt.Errorf("failed to scan row: %w", err)
+		}
+		usersList = append(usersList, activeUser)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("rows error: %w", err)
+	}
+
+	return usersList, nil
+
+}
+
+func (r *PostgresUserRepository) IsUserActive(ctx context.Context, userId string) (bool, error) {
+	query, args, err := r.sq.Select("is_active").From("users").Where(squirrel.Eq{"user_id": userId}).ToSql()
+
+	if err != nil {
+		return false, fmt.Errorf("failed to build get is_active for user: %w", err)
+	}
+
+	exec := executerFromContext(ctx, r.db)
+
+	var isActive bool
+	if err := exec.QueryRowContext(ctx, query, args...).Scan(&isActive); err != nil {
+		if err == sql.ErrNoRows {
+			return false, entity.ErrNotFound
+		}
+
+		return false, fmt.Errorf("failed to scan is_active row: %w", err)
+	}
+
+	return isActive, nil
 }

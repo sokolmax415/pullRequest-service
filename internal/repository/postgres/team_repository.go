@@ -58,7 +58,7 @@ func (r *PostgresTeamRepository) GetTeamForUserId(ctx context.Context, userId st
 	return &currentTeam, nil
 }
 
-func (r *PostgresTeamRepository) GetTeam(ctx context.Context, teamName string) (*entity.Team, error) {
+func (r *PostgresTeamRepository) GetTeamByName(ctx context.Context, teamName string) (*entity.Team, error) {
 	query, args, err := r.sq.Select("user_id", "username", "is_active").From("users").Where(squirrel.Eq{"team_name": teamName}).ToSql()
 	if err != nil {
 		return nil, fmt.Errorf("failed to build get team members query")

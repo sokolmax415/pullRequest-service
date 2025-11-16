@@ -3,11 +3,8 @@ package postgres
 import (
 	"context"
 	"database/sql"
-	"errors"
 	"fmt"
 	"pullrequest-service/internal/entity"
-
-	"github.com/jackc/pgx/v5/pgconn"
 )
 
 type TxManager struct {
@@ -41,12 +38,4 @@ func (m *TxManager) WithTx(ctx context.Context, fn func(context.Context) error) 
 	}
 
 	return nil
-}
-
-func isSerializationFailure(err error) bool {
-	var pgErr *pgconn.PgError
-	if errors.As(err, &pgErr) {
-		return pgErr.Code == "40001"
-	}
-	return false
 }
