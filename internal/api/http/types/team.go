@@ -3,6 +3,7 @@ package types
 import (
 	"encoding/json"
 	"net/http"
+	"pullrequest-service/internal/entity"
 )
 
 type TeamRequestDTO struct {
@@ -28,4 +29,20 @@ func ParseTeamRequestDTO(r *http.Request) (*TeamRequestDTO, error) {
 	defer r.Body.Close()
 
 	return &req, nil
+}
+
+func FromEntityTeam(t *entity.Team) TeamRequestDTO {
+	members := make([]TeamMemberDTO, len(t.Members))
+	for i, m := range t.Members {
+		members[i] = TeamMemberDTO{
+			UserID:   m.UserID,
+			UserName: m.UserName,
+			IsActive: m.IsActive,
+		}
+	}
+
+	return TeamRequestDTO{
+		TeamName: t.TeamName,
+		Members:  members,
+	}
 }

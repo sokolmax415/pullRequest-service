@@ -6,12 +6,12 @@ import (
 )
 
 type UserUsecase interface {
-	SetActiveFlag(ctx context.Context, userId string, isActive bool) error
+	SetActiveFlag(ctx context.Context, userId string, isActive bool) (*entity.User, error)
 	GetPR(ctx context.Context, userId string) ([]entity.PullRequestShort, error)
 }
 
 type TeamUsecase interface {
-	MergePR(ctx context.Context, prId string) (*entity.PullRequest, error)
+	AddTeam(ctx context.Context, team *entity.Team) error
 	GetTeam(ctx context.Context, teamName string) (*entity.Team, error)
 }
 
