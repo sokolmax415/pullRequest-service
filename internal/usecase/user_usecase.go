@@ -1,0 +1,79 @@
+package usecase
+
+import (
+	"context"
+	"log/slog"
+	"pullrequest-service/internal/entity"
+)
+
+type UserUsecase struct {
+	userRep UserRepository
+	prRep   PRRepository
+	logger  *slog.Logger
+}
+
+func NewUserUsecase(userRep UserRepository, prRep PRRepository, logger *slog.Logger) *UserUsecase {
+	return &UserUsecase{userRep: userRep, prRep: prRep, logger: logger}
+}
+
+func (u *UserUsecase) SetActiveFlag(ctx context.Context, userId string, isActive bool) error {
+	u.logger.Info("start setting activity flag for user", "user_id", userId, "is_active", isActive)
+
+	if userId == "" {
+		u.logger.Warn("invalid user id: empty", "user_id", userId)
+		return entity.ErrInvalidRequest
+	}
+
+	exist, err := u.userRep.IsUserExist(ctx, userId)
+
+	if err != nil {
+		u.logger.Error("error checking user existence", "user_id", userId, "error", err)
+		return entity.ErrInternalError
+	}
+
+	if !exist {
+		u.logger.Warn("user not found", "user_id", userId)
+		return entity.ErrNotFound
+	}
+
+	err = u.userRep.SetActive(ctx, userId, isActive)
+	if err != nil {
+		u.logger.Error("failed to set user activity flag", "user_id", userId, "is_active", isActive, "error", err)
+		return entity.ErrInternalError
+	}
+
+	u.logger.Info("successfully set activity flag for user", "user_id", userId, "is_active", isActive)
+
+	return nil
+}
+
+func (u *UserUsecase) GetPR(ctx context.Context, userId string) ([]entity.PullRequestShort, error) {
+	u.logger.Info("start get PR list for user", "user_id", userId)
+
+	if userId == "" {
+		u.logger.Warn("invalid user id: empty", "user_id", userId)
+		return nil, entity.ErrInvalidRequest
+	}
+
+	exist, err := u.userRep.IsUserExist(ctx, userId)
+
+	if err != nil {
+		u.logger.Error("error checking user existence", "user_id", userId, "error", err)
+		return nil, entity.ErrInternalError
+	}
+
+	if !exist {
+		u.logger.Warn("user not found", "user_id", userId)
+		return nil, entity.ErrNotFound
+	}
+
+	prList, err := u.prRep.GetAllPRForReviewer(ctx, userId)
+
+	if err != nil {
+		u.logger.Error("failed to get PR list for user", "user_id", userId, "error", err)
+	}
+
+	u.logger.Info("successfully got PR list for user", "user_id", userId, "pr_count", len(prList))
+
+	return prList, nil
+}

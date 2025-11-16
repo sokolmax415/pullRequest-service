@@ -6,7 +6,7 @@ import (
 	"pullrequest-service/internal/entity"
 	"time"
 
-	"github.com/gookit/slog"
+	"log/slog"
 )
 
 type TeamUsecase struct {
@@ -21,21 +21,21 @@ func NewTeamUsecase(teamRep TeamRepository, userRep UserRepository, txMgr TxMana
 }
 
 func (u *TeamUsecase) AddTeam(ctx context.Context, team *entity.Team) error {
-	u.logger.Info("adding team", "team_name", team.TeamName, "members_count", len(team.Members))
+	u.logger.Info("start adding team", "team_name", team.TeamName, "members_count", len(team.Members))
 
 	if err := team.Validate(); err != nil {
-		u.logger.Info("team validation failed", "team_name", team.TeamName, "error", err.Error())
+		u.logger.Info("team validation failed", "team_name", team.TeamName, "error", err)
 		return err
 	}
 
 	operation := func(ctx context.Context) error {
 		if err := u.teamRep.CreateNewTeam(ctx, team.TeamName); err != nil {
 			if errors.Is(err, entity.ErrTeamExists) {
-				u.logger.Warn("team already exsists", "team_name", team.TeamName, "error", err.Error())
+				u.logger.Warn("team already exsists", "team_name", team.TeamName, "error", err)
 				return err
 			}
 
-			u.logger.Error("failed to insert team", "team_name", team.TeamName, "error", err.Error())
+			u.logger.Error("failed to create team", "team_name", team.TeamName, "error", err)
 			return entity.ErrInternalError
 		}
 
@@ -43,18 +43,18 @@ func (u *TeamUsecase) AddTeam(ctx context.Context, team *entity.Team) error {
 			teamForMember, err := u.teamRep.GetTeamForUserId(ctx, member.UserID)
 
 			if err != nil {
-				u.logger.Error("failed to get user's team", "user_id", member.UserID, "error", err.Error())
+				u.logger.Error("failed to get user's team", "user_id", member.UserID, "error", err)
 				return entity.ErrInternalError
 			}
 
 			if teamForMember != nil {
-				u.logger.Warn("user is already in another team", "user_id", member.UserID)
+				u.logger.Warn("user already in another team", "user_id", member.UserID)
 				return entity.ErrUserInAnotherTeam
 			}
 
 			user := &entity.User{UserID: member.UserID, UserName: member.UserName, IsActive: member.IsActive, TeamName: team.TeamName}
 			if err := u.userRep.AddUserToTeam(ctx, user); err != nil {
-				u.logger.Error("failed to insert user", "user_id", member.UserID, "error", err.Error())
+				u.logger.Error("failed to add user to team", "user_id", member.UserID, "error", err)
 				return entity.ErrInternalError
 			}
 		}
@@ -73,21 +73,26 @@ func (u *TeamUsecase) AddTeam(ctx context.Context, team *entity.Team) error {
 }
 
 func (u *TeamUsecase) GetTeam(ctx context.Context, teamName string) (*entity.Team, error) {
-	u.logger.Info("getting team", "team_name", teamName)
+	u.logger.Info("start getting team", "team_name", teamName)
 
-	team, err := u.teamRep.GetTeam(ctx, teamName)
+	if teamName == "" {
+		u.logger.Warn("invalid team_name: empty", "team_name", teamName)
+		return nil, entity.ErrInvalidRequest
+	}
+
+	team, err := u.teamRep.GetTeamByName(ctx, teamName)
 
 	if err != nil {
 		if errors.Is(err, entity.ErrNotFound) {
-			u.logger.Warn("team not found", "team_name", teamName, "error", err.Error())
+			u.logger.Warn("team not found", "team_name", teamName, "error", err)
 			return nil, err
 		}
 
-		u.logger.Error("failed to get team", "team_name", teamName, "error", err.Error())
+		u.logger.Error("failed to get team", "team_name", teamName, "error", err)
 		return nil, entity.ErrInternalError
 	}
 
-	u.logger.Info("team is got", "team_name", teamName)
+	u.logger.Info("successfully got team", "team_name", teamName)
 
 	return team, nil
 
