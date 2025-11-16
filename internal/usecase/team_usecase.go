@@ -40,7 +40,7 @@ func (u *TeamUsecase) AddTeam(ctx context.Context, team *entity.Team) error {
 		}
 
 		for _, member := range team.Members {
-			teamForMember, err := u.teamRep.GetTeamForUserId(ctx, member.UserID)
+			teamForMember, err := u.teamRep.GetTeamNameByUserId(ctx, member.UserID)
 
 			if err != nil {
 				u.logger.Error("failed to get user's team", "user_id", member.UserID, "error", err)

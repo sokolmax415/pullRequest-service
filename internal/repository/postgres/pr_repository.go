@@ -89,7 +89,8 @@ func (r *PostgresPRRepository) AddReviewerForPR(ctx context.Context, prId string
 }
 
 func (r *PostgresPRRepository) MergePR(ctx context.Context, prId string) error {
-	query, args, err := r.sq.Update("pull_requests").Set("status", entity.MERGED).Where(squirrel.Eq{"pull_request_id": prId}).ToSql()
+	query, args, err := r.sq.Update("pull_requests").Set("status", entity.MERGED).Set("merged_at", squirrel.Expr("NOW()")).
+		Where(squirrel.Eq{"pull_request_id": prId}).ToSql()
 
 	if err != nil {
 		return fmt.Errorf("failed to build update PR status: %w", err)
@@ -120,7 +121,7 @@ func (r *PostgresPRRepository) IsReviewerForPR(ctx context.Context, prId string,
 	var dummy string
 	if err := exec.QueryRowContext(ctx, query, args...).Scan(&dummy); err != nil {
 		if err == sql.ErrNoRows {
-			return false, nil
+			return false, fmt.Errorf("user not found for PR: %w", entity.ErrNotAssigned)
 		}
 		return false, fmt.Errorf("exec select reviewer exists query: %w", err)
 	}
@@ -186,7 +187,7 @@ func (r PostgresPRRepository) GetPRById(ctx context.Context, prId string) (*enti
 	return &PR, nil
 }
 
-func (r *PostgresPRRepository) GetReviewersIdForPR(ctx context.Context, prId string) ([]string, error) {
+func (r *PostgresPRRepository) GetReviewersIdByPR(ctx context.Context, prId string) ([]string, error) {
 	query, args, err := r.sq.Select("prr.user_id").From("pull_requests pr").
 		Join("pr_reviewers prr ON pr.pull_request_id = prr.pull_request_id").
 		Where(squirrel.Eq{"pr.pull_request_id": prId}).ToSql()

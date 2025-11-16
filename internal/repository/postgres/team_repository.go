@@ -38,7 +38,7 @@ func (r *PostgresTeamRepository) CreateNewTeam(ctx context.Context, teamName str
 	return nil
 }
 
-func (r *PostgresTeamRepository) GetTeamForUserId(ctx context.Context, userId string) (*string, error) {
+func (r *PostgresTeamRepository) GetTeamNameByUserId(ctx context.Context, userId string) (*string, error) {
 	var currentTeam string
 	query, args, err := r.sq.Select("team_name").From("users").Where(squirrel.Eq{"user_id": userId}).ToSql()
 	if err != nil {

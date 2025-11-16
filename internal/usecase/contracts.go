@@ -11,7 +11,7 @@ type TxManager interface {
 
 type TeamRepository interface {
 	CreateNewTeam(ctx context.Context, teamName string) error
-	GetTeamForUserId(ctx context.Context, userId string) (*string, error)
+	GetTeamNameByUserId(ctx context.Context, userId string) (*string, error)
 	GetTeamByName(ctx context.Context, teamName string) (*entity.Team, error)
 }
 
@@ -32,6 +32,6 @@ type PRRepository interface {
 	IsPROpen(ctx context.Context, prId string) (bool, error)
 	DeleteReviewer(ctx context.Context, prId string, userId string) error
 	GetPRById(ctx context.Context, prId string) (*entity.PullRequest, error)
-	GetReviewersIdForPR(ctx context.Context, prId string) ([]string, error)
+	GetReviewersIdByPR(ctx context.Context, prId string) ([]string, error)
 	IsPRExist(ctx context.Context, prId string) (bool, error)
 }
