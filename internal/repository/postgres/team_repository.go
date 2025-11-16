@@ -50,7 +50,7 @@ func (r *PostgresTeamRepository) GetTeamForUserId(ctx context.Context, userId st
 	err = exec.QueryRowContext(ctx, query, args...).Scan(&currentTeam)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, nil
+			return nil, fmt.Errorf("team: %w", entity.ErrNotFound)
 		}
 		return nil, fmt.Errorf("failed to select team_name from users: %w", err)
 	}

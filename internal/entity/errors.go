@@ -7,7 +7,7 @@ var (
 	ErrInvalidRequest = errors.New("invalid request")
 
 	ErrTeamExists        = errors.New("team_name already exists")
-	ErrUserInAnotherTeam = errors.New("user already in another")
+	ErrUserInAnotherTeam = errors.New("user already in another team")
 
 	ErrPRExists    = errors.New("PR id already exists")
 	ErrPRMerged    = errors.New("cannot reassign on merged PR")

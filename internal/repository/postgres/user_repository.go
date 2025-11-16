@@ -47,7 +47,7 @@ func (r *PostgresUserRepository) IsUserExist(ctx context.Context, userId string)
 	err = exec.QueryRowContext(ctx, query, args...).Scan(&dummy)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return false, nil
+			return false, fmt.Errorf("user not found: %w", entity.ErrNotFound)
 		}
 		return false, fmt.Errorf("exec select user exists query: %w", err)
 	}
@@ -56,7 +56,7 @@ func (r *PostgresUserRepository) IsUserExist(ctx context.Context, userId string)
 
 }
 
-func (r *PostgresUserRepository) SetActive(ctx context.Context, userId string, isActive string) error {
+func (r *PostgresUserRepository) SetActive(ctx context.Context, userId string, isActive bool) error {
 	query, args, err := r.sq.Update("users").Set("is_active", isActive).Where(squirrel.Eq{"user_id": userId}).ToSql()
 
 	if err != nil {
@@ -73,8 +73,8 @@ func (r *PostgresUserRepository) SetActive(ctx context.Context, userId string, i
 	return nil
 }
 
-func (r *PostgresUserRepository) GetActiveUsersByTeam(ctx context.Context, teamName string) ([]entity.User, error) {
-	query, args, err := r.sq.Select("user_id", "username", "is_active", "team_name").From("users").
+func (r *PostgresUserRepository) GetActiveUsersByTeam(ctx context.Context, teamName string) ([]string, error) {
+	query, args, err := r.sq.Select("user_id").From("users").
 		Where(squirrel.Eq{"is_active": true, "team_name": teamName}).ToSql()
 
 	if err != nil {
@@ -89,11 +89,11 @@ func (r *PostgresUserRepository) GetActiveUsersByTeam(ctx context.Context, teamN
 	}
 	defer rows.Close()
 
-	usersList := make([]entity.User, 0)
+	usersList := make([]string, 0)
 
 	for rows.Next() {
-		var activeUser entity.User
-		if err := rows.Scan(&activeUser.UserID, &activeUser.UserName, &activeUser.IsActive, &activeUser.TeamName); err != nil {
+		var activeUser string
+		if err := rows.Scan(&activeUser); err != nil {
 			return nil, fmt.Errorf("failed to scan row: %w", err)
 		}
 		usersList = append(usersList, activeUser)
