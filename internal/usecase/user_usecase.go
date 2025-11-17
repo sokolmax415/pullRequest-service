@@ -62,16 +62,15 @@ func (u *UserUsecase) GetPR(ctx context.Context, userId string) ([]entity.PullRe
 		return nil, entity.ErrInvalidRequest
 	}
 
-	exist, err := u.userRep.IsUserExist(ctx, userId)
+	_, err := u.userRep.IsUserExist(ctx, userId)
 
 	if err != nil {
+		if errors.Is(err, entity.ErrNotFound) {
+			u.logger.Warn("user not found", "user_id", userId)
+			return nil, err
+		}
 		u.logger.Error("error checking user existence", "user_id", userId, "error", err)
 		return nil, entity.ErrInternalError
-	}
-
-	if !exist {
-		u.logger.Warn("user not found", "user_id", userId)
-		return nil, entity.ErrNotFound
 	}
 
 	prList, err := u.prRep.GetAllPRForReviewer(ctx, userId)
