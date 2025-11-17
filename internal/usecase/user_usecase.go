@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"errors"
 	"log/slog"
 	"pullrequest-service/internal/entity"
 )
@@ -24,16 +25,15 @@ func (u *UserUsecase) SetActiveFlag(ctx context.Context, userId string, isActive
 		return nil, entity.ErrInvalidRequest
 	}
 
-	exist, err := u.userRep.IsUserExist(ctx, userId)
+	_, err := u.userRep.IsUserExist(ctx, userId)
 
 	if err != nil {
+		if errors.Is(err, entity.ErrNotFound) {
+			u.logger.Warn("user not found", "user_id", userId)
+			return nil, err
+		}
 		u.logger.Error("error checking user existence", "user_id", userId, "error", err)
 		return nil, entity.ErrInternalError
-	}
-
-	if !exist {
-		u.logger.Warn("user not found", "user_id", userId)
-		return nil, entity.ErrNotFound
 	}
 
 	err = u.userRep.SetActive(ctx, userId, isActive)
@@ -46,6 +46,7 @@ func (u *UserUsecase) SetActiveFlag(ctx context.Context, userId string, isActive
 
 	if err != nil {
 		u.logger.Error("failed to get user", "user_id", userId, "error", err)
+		return nil, entity.ErrInternalError
 	}
 
 	u.logger.Info("successfully set activity flag for user", "user_id", userId, "is_active", isActive)

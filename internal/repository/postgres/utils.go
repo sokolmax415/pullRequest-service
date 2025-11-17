@@ -3,9 +3,8 @@ package postgres
 import (
 	"context"
 	"database/sql"
-	"errors"
 
-	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/lib/pq"
 )
 
 type Execer interface {
@@ -15,17 +14,15 @@ type Execer interface {
 }
 
 func isUniqueViolation(err error) bool {
-	var pgErr *pgconn.PgError
-	if errors.As(err, &pgErr) {
-		return pgErr.Code == "23505"
+	if err, ok := err.(*pq.Error); ok {
+		return err.Code == "23505"
 	}
 	return false
 }
 
 func isSerializationFailure(err error) bool {
-	var pgErr *pgconn.PgError
-	if errors.As(err, &pgErr) {
-		return pgErr.Code == "40001"
+	if err, ok := err.(*pq.Error); ok {
+		return err.Code == "40001"
 	}
 	return false
 }

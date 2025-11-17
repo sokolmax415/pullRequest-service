@@ -68,6 +68,6 @@ func HandleError(w http.ResponseWriter, err error) {
 		resp.Err.Code = entity.CodeNotAssigned
 		resp.Err.Message = entity.ErrNotAssigned.Error()
 
-		WriteJSON(w, status, resp)
 	}
+	WriteJSON(w, status, resp)
 }

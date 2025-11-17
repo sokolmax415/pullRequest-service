@@ -1,18 +1,16 @@
 package handler
 
 import (
-	"log/slog"
 	"net/http"
 	"pullrequest-service/internal/api/http/types"
 )
 
 type PRHandler struct {
 	prUsecase PRUsecase
-	logger    *slog.Logger
 }
 
-func NewPRHandler(prUsecase PRUsecase, logger *slog.Logger) *PRHandler {
-	return &PRHandler{prUsecase: prUsecase, logger: logger}
+func NewPRHandler(prUsecase PRUsecase) *PRHandler {
+	return &PRHandler{prUsecase: prUsecase}
 }
 
 func (h *PRHandler) CreatePR(w http.ResponseWriter, r *http.Request) {

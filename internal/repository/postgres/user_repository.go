@@ -129,7 +129,7 @@ func (r *PostgresUserRepository) IsUserActive(ctx context.Context, userId string
 }
 
 func (r *PostgresUserRepository) GetUserById(ctx context.Context, userId string) (*entity.User, error) {
-	query, args, err := r.sq.Select("user_id,username,team_name,is_active").From("users").Where(squirrel.Eq{"user_id": userId}).ToSql()
+	query, args, err := r.sq.Select("user_id", "username", "team_name", "is_active").From("users").Where(squirrel.Eq{"user_id": userId}).ToSql()
 
 	if err != nil {
 		return nil, fmt.Errorf("failed to build get user: %w", err)
@@ -139,7 +139,7 @@ func (r *PostgresUserRepository) GetUserById(ctx context.Context, userId string)
 
 	user := &entity.User{}
 
-	if err := exec.QueryRowContext(ctx, query, args...).Scan(&user.UserID, &user.UserName, &user.TeamName, user.IsActive); err != nil {
+	if err := exec.QueryRowContext(ctx, query, args...).Scan(&user.UserID, &user.UserName, &user.TeamName, &user.IsActive); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, entity.ErrNotFound
 		}

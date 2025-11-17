@@ -1,5 +1,5 @@
--- +goose Up
-CREATE TABLE IF NOT EXISTS teams (
+
+CREATE TABLE IF NOT EXISTS public.teams (
     team_name TEXT PRIMARY KEY
 );
 
@@ -35,10 +35,4 @@ CREATE TABLE IF NOT EXISTS pr_reviewers (
 
 CREATE INDEX IF NOT EXISTS idx_pr_reviewers_pr ON pr_reviewers(pull_request_id);
 CREATE INDEX IF NOT EXISTS idx_pr_reviewers_user ON pr_reviewers(user_id);
-
--- +goose Down
-DROP TABLE IF EXISTS pr_reviewers;
-DROP TABLE IF EXISTS pull_requests;
-DROP TABLE IF EXISTS users;
-DROP TABLE IF EXISTS teams;
 
